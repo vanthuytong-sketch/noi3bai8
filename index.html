@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级汉语听说 - 第八课：休闲，人生多彩之面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'SimSun', '宋体', serif; background-color: #f8fafc; color: #1e293b; }
+        .zh-text { font-family: 'SimSun', '宋体', serif; font-size: 1.35rem; line-height: 2.1; }
+        
+        .flip-card { background-color: transparent; height: 320px; perspective: 1000px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #cbd5e1; padding: 1.5rem; background-color: white;}
+        .flip-card-back { transform: rotateY(180deg); background-color: #f0fdf4; align-items: flex-start; text-align: left; overflow-y: auto; }
+        
+        .nav-item { padding: 1rem 1.5rem; cursor: pointer; border-left: 4px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; font-size: 1.15rem; font-weight: bold;}
+        .nav-item:hover { background-color: #334155; }
+        .nav-item.active { background-color: #2563eb; border-left-color: #93c5fd; }
+        
+        .shadowing-block { transition: all 0.3s ease; }
+        .shadowing-block:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .recording { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; color: white !important; }
+        
+        /* CSS cho Font chữ To ở phần Flashcard (Mặt sau) */
+        .flashcard-content { font-size: 1.25rem; /* ~20px */ }
+        .flashcard-meaning { font-size: 1.35rem; /* ~22px */ }
+        .flashcard-zh-meaning { font-size: 1.2rem; color: #475569; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <div class="w-80 bg-slate-900 text-white flex flex-col shrink-0 z-10 shadow-xl overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-2xl font-bold mb-1"><i class="fas fa-graduation-cap text-blue-400 mr-2"></i>高级汉语听说</h1>
+            <p class="text-slate-400 text-sm">第八课：休闲，人生多彩之面</p>
+        </div>
+        
+        <div class="py-4">
+            <div class="nav-item active" onclick="switchTab('reading', this)"><i class="fas fa-book-open w-6 text-center"></i> 叙述课文</div>
+            <div class="nav-item" onclick="switchTab('shadowing', this)"><i class="fas fa-microphone-alt w-6 text-center"></i> 智能跟读</div>
+            <div class="nav-item" onclick="switchTab('vocab', this)"><i class="fas fa-layer-group w-6 text-center"></i> 词语例释</div>
+            <div class="nav-item" onclick="switchTab('practice_1', this)"><i class="fas fa-edit w-6 text-center"></i> 练习一</div>
+            <div class="nav-item" onclick="switchTab('practice_2', this)"><i class="fas fa-tasks w-6 text-center"></i> 练习二</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 bg-slate-50 overflow-y-auto relative" id="main-container">
+        
+        <!-- AUDIO PLAYER BAR (Fixed at top) -->
+        <div class="sticky top-0 z-20 bg-white border-b border-slate-200 px-8 py-4 shadow-sm flex items-center justify-between">
+            <div class="flex items-center gap-4 w-full">
+                <div class="shrink-0 font-bold text-slate-700"><i class="fas fa-headphones text-blue-600 mr-2"></i>课文录音:</div>
+                <input type="file" id="audio-upload" accept="audio/*" class="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                <audio id="main-audio" controls class="w-full h-10 ml-4 hidden"></audio>
+            </div>
+        </div>
+
+        <div class="p-8 max-w-5xl mx-auto" id="content-area">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+
+<script>
+    // --- DATA ---
+    const lessonData = {
+        title: "我们的周末生活",
+        paragraphs: [
+            "一般普通老百姓的周末干什么呢？我们来听听他们自己是怎么说的。",
+            "【1. 吃吃玩玩又一周】\n我们这些平民老百姓，周末玩不出什么花样，也就是出去吃吃饭，换换口味；偶尔和朋友们去唱唱卡拉OK什么的。要不就是陪孩子去吃肯德基、麦当劳。我们都是工薪阶层，消费主要以经济实惠为主，总不能为了过几个周末就勒紧腰带过日子吧？",
+            "要是我们两口子都没什么事，也可能去市场买回新鲜的鱼、虾、肉、蔬菜，自己动手，丰衣足食。我先生的厨艺不错，在朋友圈儿里挺有名的，有时也会有朋友周末非得在我家尝尝我们的手艺，我们就只好大显身手忙活一下。",
+            "当然这样的次数不多，现在大家都挺自觉的，忙了一周，都想放松一下，己所不欲，勿施于人嘛，所以这串门一类的活动大多都取消了。",
+            "【2. 寻找“驴友”一起玩】\n我现在还是单身贵族，一个人吃饱了全家不饿，有大把的时间和钱可以自由支配。所以一到周末我就想跑出去放放风。现在网上有很多自助游的帖子，几个人一凑合背起包就直奔周边的风景点。",
+            "我们这些驴友玩得真的挺开心的，要么在野外搭帐篷野营，要么开车去郊区兜风，有时也找个鱼塘钓鱼，无拘无束，自由自在，弄得周一都不想去上班了。以后得小心点，否则真得了“星期一病”可就麻烦了。",
+            "【3. 围着孩子转】\n像我们这个年龄的人差不多没有自己的周末，一切都围着孩子转。我女儿今年7岁，上小学二年级，周末要去钢琴老师家学钢琴，去少年宫学画画，还要参加一个英语班。",
+            "说实话，孩子累，家长也累，整天跟着孩子跑到这儿跑到那儿，孩子在里面学习，家长夏天在外挨晒，冬天在外挨冻。可不这样又能如何？现在提倡素质教育，要求孩子全面发展，这琴棋书画的不是都得拿得起放得下吗？外语就更不用说了。",
+            "好不容易孩子学完了，小家伙一肚子委屈，又得带她去游乐场，要不就去必胜客，反正得犒劳犒劳她。这一圈转下来，双休日就过去了，又得打起精神去上班了。唉，周末真是比上班还辛苦啊！",
+            "【4. 跳出老年的精彩】\n我和老伴儿现在退休了。老两口平时没什么大事，闲着也是闲着，就帮儿子照看照看孩子。到了周末，儿子媳妇说是要让我们解放解放，吃完晚饭就把孩子接回自己的小家去了。我和老头子也乐得过个轻松的周末。",
+            "老伴爱京剧，是个不错的票友，他周末和一帮人又拉又唱的，乐和得很。我和一帮老太太去跳舞，什么大秧歌、扇子舞、剑舞都跳。开始时手脚不灵活，现在越跳越带劲儿，越跳越精神，两天跳下来，又锻炼了身体，还充实了生活。这样的老年生活真是越活越精彩了。",
+            "【5. 和男朋友黏在一起】\n我周末干什么？当然是和男朋友在一起啊。我这个孩子王一周五天忙得天昏地暗的，和我男朋友没什么见面的时间，所以我把周末大部分时间都留给他了。",
+            "你问我们在一起干什么？那不一定，有时出去玩，有时去逛街，也不为买什么，只是走走看看，有时看场电影，或者逛逛书店、音像店，也可能去唱歌、跳舞，或者干脆哪儿也不去，在他家或我家里听音乐、看书、聊天，一起做饭。",
+            "反正干什么不重要，只要两个人在一起享受这种亲亲热热、甜甜蜜蜜的感觉就可以了。两天时间过得太快，常常还没热乎够就又得上班了。要是一周休息三天该多好啊！",
+            "【6. 在题海里拼搏】\n我们哪有什么周末啊。从上高中开始，周六就不休了，只剩下周日一天，可老师生怕我们闲着，比赛似的给我们留作业。每个老师都说自己的作业并不多，可加起来就变成题海了。",
+            "我们一回家就埋头苦干，快了还可以抽点时间看会儿电视什么的，慢了就只好直奔亲爱的床了。真是苦海无边啊！现在恨不得马上高考，然后好好享受一下正常人的周末生活。",
+            "【7. 我们是赚钱的机器】\n我们这家公司挺红火的，一年的盈利上千万，别人羡慕死我们了，可谁知道我们这些干活的有多辛苦。老板周末在公司呆着，那我们也走不了啊，我们也得好好表现表现，否则饭碗还要不要了？",
+            "我这一年能休息的日子数得过来，老婆虽然能理解，可孩子不干了，整天说我不关心他，别人的爸爸都陪着去公园、游乐场，为什么自己的爸爸从来没时间？肯定都是装的，不想带自己出去玩呗。",
+            "你说我冤不冤，我比那窦娥还冤啊！所以这人啊，混到我这一步，在别人眼里还挺风光的，可说白了只是老板赚钱的机器而已，哪赶得上人家普通工人农民整天老婆孩子热炕头的。我真想过过以前那种轻松自在的日子啊。"
+        ],
+        vocab: [
+            { w: "勒紧腰带", p: "lēijǐn yāodài", mzh: "比喻节省吃穿以渡过生活艰难的阶段。", m: "Thắt lưng buộc bụng.", ex: "这个月为过节花了不少钱，看来下个月要勒紧腰带过日子了。" },
+            { w: "大显身手", p: "dàxiǎn shēnshǒu", mzh: "充分显示自己的本领。", m: "Trổ tài, thi thố tài năng.", ex: "这次运动会我可以大显身手了。" },
+            { w: "己所不欲，勿施于人", p: "jǐ suǒ bú yù, wù shī yú rén", mzh: "自己不想做的事不要强加给别人。", m: "Kỷ sở bất dục, vật thi ư nhân (Việc mình không muốn thì đừng ép người khác làm).", ex: "你自己都不愿意做的事怎么能逼孩子做呢？你不知道己所不欲，勿施于人吗？" },
+            { w: "放风", p: "fàng fēng", mzh: "原指监狱里定时放坐牢的人到院子里散步。这里比喻脱离工作生活的束缚出去放松身心。", m: "Đi hóng gió, thư giãn (thoát khỏi sự trói buộc của công việc).", ex: "走吧，下班了，我们出去放放风吧。" },
+            { w: "自助游", p: "zìzhù yóu", mzh: "不跟旅行团的旅游。", m: "Du lịch tự túc (không đi theo tour).", ex: "现在很多人喜欢自助游。" },
+            { w: "犒劳", p: "kàolao", mzh: "用饮食等慰劳。", m: "Khao, thiết đãi (bằng đồ ăn uống).", ex: "你今天太累了，做点好吃的犒劳犒劳你。" },
+            { w: "乐得", p: "lèdé", mzh: "某种安排或情况符合自己的心意因此顺其自然地接受。", m: "Sẵn lòng, vui vẻ chấp nhận (một sự sắp xếp hợp ý).", ex: "他让我出去，我正好乐得休息一下，就高高兴兴地出去了。" },
+            { w: "乐和", p: "lèhe", mzh: "快乐，高兴。", m: "Vui vẻ, sung sướng.", ex: "今天晚上我们去唱歌乐和乐和。" },
+            { w: "热乎", p: "rèhu", mzh: "亲热。也作热和(huo)。", m: "Thân thiết, nồng ấm.", ex: "俩人一见面就热乎得不得了。" },
+            { w: "苦海无边", p: "kǔhǎi wúbiān", mzh: "比喻很苦的处境没有尽头。", m: "Bể khổ vô biên (hoàn cảnh đau khổ không có lối thoát/điểm dừng).", ex: "天天这么学习，真是苦海无边啊！" },
+            { w: "风光", p: "fēngguang", mzh: "热闹体面。", m: "Nở mày nở mặt, thể diện, vẻ vang.", ex: "不要羡慕表面的风光，要看他是不是真正的幸福。" }
+        ],
+        practice1: [
+            { q: "1. 这家饭店的饭菜不贵，菜量大，也比较好吃。", hint: "经济实惠", deep: "挺经济实惠的" },
+            { q: "2. 我会画画儿，办宣传栏的时候我可以好好发挥我的才能了。", hint: "大显身手", deep: "我可以大显身手了" },
+            { q: "3. 领导让我去上海出差，我也正好想去看看上海的夜景，就很愉快地去了。", hint: "乐得", deep: "我正好乐得去看看……" },
+            { q: "4. 他们虽没有很多钱，但在一起每天都很开心。", hint: "乐和", deep: "都挺乐和的" },
+            { q: "5. 我刚刚和丈夫团聚了一周就得回去了。", hint: "热乎", deep: "还没热乎够就得回去了" },
+            { q: "6. 周末去郊区玩玩，放松放松。", hint: "放风", deep: "去郊区放风" }
+        ],
+        practice2: [
+            { q: "1. 我们下个月要贷款买房子，从下个月开始不能随便花钱。", hint: "勒紧腰带过日子", deep: "我们得勒紧腰带过日子" },
+            { q: "2. 出去野营的时候大家自己做饭吃。", hint: "自己动手，丰衣足食", deep: "自己做饭 -> 自己动手<br>丰衣足食 -> 丰衣足食的感觉 -> 有“自己动手，丰衣足食”的精神" },
+            { q: "3. 甲：你不想找个女朋友吗？<br>乙：我觉得一个人的日子虽然寂寞但是没有约束。", hint: "一个人吃饱了全家不饿", deep: "现在是一个人吃饱了全家不饿 -> 自由/没有压力和约束" },
+            { q: "4. 甲：你回国以后都干了什么？<br>乙：我要么（休息），要么（看书），有时也（见朋友）。", hint: "要么……，要么……，有时也……", deep: "回国后我要么……，要么……，有时候……" },
+            { q: "5. 我也不想天天做家务，可是我不做没人做。", hint: "我也不想……，可不这样又能如何？", deep: "（……）天天做家务，（……）？" },
+            { q: "6. 我也不想天天学习，可是没有办法。", hint: "我也不想……，可不这样又能如何？", deep: "（……）天天学习，（……）？" },
+            { q: "7. 甲：妈妈，你别洗衣服了，休息一会儿吧。<br>乙：没事，我很快就干完了。", hint: "闲着也是闲着", deep: "没事，闲着也是闲着，……。" },
+            { q: "8. 你其实并不喜欢我，而是喜欢我的钱。", hint: "说白了", deep: "其实 -> 说白了" },
+            { q: "9. 他能当领导不是因为有能力，只是因为他的家庭背景。", hint: "说白了", deep: "说白了，……" }
+        ]
+    };
+
+    // --- AUDIO UPLOAD LOGIC ---
+    const audioUpload = document.getElementById('audio-upload');
+    const mainAudio = document.getElementById('main-audio');
+    
+    audioUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            mainAudio.src = url;
+            mainAudio.classList.remove('hidden');
+        }
+    });
+
+    // --- STATE VARIABLES ---
+    const contentArea = document.getElementById('content-area');
+    let recordedAudios = {};      // For shadowing
+    let recordedPractice1 = {};   // For Practice 1
+    let recordedPractice2 = {};   // For Practice 2
+    let mediaRecorder;
+    let audioChunks = [];
+    let currentRecordingId = null;
+
+    // --- NAVIGATION LOGIC ---
+    function switchTab(tab, element) {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        
+        let html = '';
+        if(tab === 'reading') html = renderReading();
+        else if(tab === 'shadowing') html = renderShadowing();
+        else if(tab === 'vocab') html = renderVocab();
+        else if(tab === 'practice_1') html = renderPractice(lessonData.practice1, "练习一 (用课文中的词语表达)", true);
+        else if(tab === 'practice_2') html = renderPractice(lessonData.practice2, "练习二 (用课文中的句型表达)", false);
+        
+        contentArea.innerHTML = html;
+        
+        // Populate inputs if they were previously filled
+        if (tab === 'shadowing' || tab.startsWith('practice')) {
+            let pType = tab === 'shadowing' ? 'shadow' : (tab === 'practice_1' ? 'p1' : 'p2');
+            let storedSTT = sessionStorage.getItem('studentSTT') || '';
+            let storedName = sessionStorage.getItem('studentName') || '';
+            let sttInput = document.getElementById(`student-stt-${pType}`);
+            let nameInput = document.getElementById(`student-name-${pType}`);
+            if(sttInput) sttInput.value = storedSTT;
+            if(nameInput) nameInput.value = storedName;
+            
+            // Add listeners to save to sessionStorage
+            if(sttInput) sttInput.addEventListener('input', (e) => sessionStorage.setItem('studentSTT', e.target.value));
+            if(nameInput) nameInput.addEventListener('input', (e) => sessionStorage.setItem('studentName', e.target.value));
+        }
+    }
+
+    // --- RENDERERS ---
+    function renderReading() {
+        let textHtml = lessonData.paragraphs.map(p => {
+            let cls = p.startsWith('【') ? 'font-bold text-xl mt-6 mb-2 text-blue-800' : 'mb-4';
+            return `<p class="zh-text ${cls}">${p.replace(/\n/g, '<br>')}</p>`;
+        }).join('');
+        return `
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-600 pb-4 border-b-4 border-blue-200 tracking-wide" style="line-height: 1.4;">第八课：休闲，人生多彩之面</h1>
+            </div>
+            <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-blue-500 inline-block">${lessonData.title}</h2>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                ${textHtml}
+            </div>
+        `;
+    }
+
+    function renderVocab() {
+        let cards = lessonData.vocab.map((v, i) => `
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <span class="absolute top-3 left-3 text-xs text-slate-400 border border-slate-200 px-2 py-1 rounded">Từ ${i+1}</span>
+                        <h3 class="text-4xl font-bold font-serif text-slate-800">${v.w}</h3>
+                        <p class="mt-4 text-blue-500 text-sm"><i class="fas fa-undo mr-1"></i> Lật thẻ</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-1">${v.p}</h3>
+                        <p class="flashcard-zh-meaning font-bold">${v.mzh}</p>
+                        <p class="flashcard-meaning font-bold text-slate-700 mb-1 border-b border-blue-100 pb-2 w-full">${v.m}</p>
+                        <div class="bg-white w-full p-2 rounded border border-slate-100 mt-2 flashcard-content text-slate-800">
+                            <span class="font-bold text-blue-500 text-sm">例句 (Ví dụ):</span><br>
+                            ${v.ex}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        return `
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-600 pb-4 border-b-4 border-blue-200 tracking-wide" style="line-height: 1.4;">第八课：休闲，人生多彩之面</h1>
+            </div>
+            <h2 class="text-2xl font-bold mb-6 text-slate-800"><i class="fas fa-layer-group text-blue-600 mr-2"></i>词语例释 (Flashcards)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${cards}</div>
+        `;
+    }
+
+    function renderPractice(data, title, isP1) {
+        let pType = isP1 ? 'p1' : 'p2';
+        let recDict = isP1 ? recordedPractice1 : recordedPractice2;
+
+        let questions = data.map((item, idx) => `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-10 h-10 shrink-0 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">${idx+1}</div>
+                    <div class="w-full flex-1">
+                        <p class="zh-text font-bold mb-3">${item.q.replace(/^\d+\.\s*/, '')}</p>
+                        <p class="text-blue-700 font-bold mb-3 bg-blue-50 inline-block px-3 py-1 rounded border border-blue-100">
+                            <i class="fas fa-key mr-1"></i> ${title.includes("一") ? "提示词语" : "提示句型"}: ${item.hint}
+                        </p>
+                        <div>
+                            <button onclick="toggleHint('hint-${pType}-${idx}')" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold transition">
+                                <i class="fas fa-eye mr-1"></i> 查看参考
+                            </button>
+                            <div id="hint-${pType}-${idx}" class="hidden mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 zh-text text-lg">
+                                <b>参考：</b><br>${item.deep}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-48 shrink-0 flex flex-col gap-3 justify-center border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+                        <button id="btn-rec-${pType}-${idx}" onclick="toggleRecord(${idx}, '${pType}')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition flex items-center justify-center gap-2">
+                            <i class="fas fa-microphone"></i> <span>Ghi âm</span>
+                        </button>
+                        <div id="playback-zone-${pType}-${idx}" class="${recDict[idx] ? '' : 'hidden'} flex flex-col gap-2">
+                            <audio id="audio-${pType}-${idx}" src="${recDict[idx] || ''}" controls class="w-full h-8"></audio>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-600 pb-4 border-b-4 border-blue-200 tracking-wide" style="line-height: 1.4;">第八课：休闲，人生多彩之面</h1>
+            </div>
+            
+            <div class="flex justify-between items-end mb-6">
+                <h2 class="text-2xl font-bold text-slate-800"><i class="fas fa-edit text-blue-600 mr-2"></i>${title}</h2>
+                <button onclick="downloadRecordings('${pType}', '${title}')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-download"></i> Tải bài nộp (HTML)
+                </button>
+            </div>
+            
+            <!-- User Info Form -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 mb-6 shadow-sm">
+                <h3 class="font-bold text-slate-800 mb-4 text-lg border-b pb-2">请填写个人信息 (Vui lòng điền thông tin cá nhân)</h3>
+                <div class="flex gap-4 flex-col md:flex-row">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">STT (序号)</label>
+                        <input type="text" id="student-stt-${pType}" placeholder="Ví dụ: 01" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Họ và tên (姓名)</label>
+                        <input type="text" id="student-name-${pType}" placeholder="Ví dụ: Nguyễn Văn A" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg mb-6 text-sm">
+                <i class="fas fa-info-circle mr-1"></i> <b>Hướng dẫn:</b> Nhấn "Ghi âm" để ghi âm câu trả lời. Sau khi hoàn thành, nhấn nút <b>"Tải bài nộp"</b> màu xanh phía trên để tải toàn bộ bài về máy tính gửi cho giáo viên.
+            </div>
+            <div class="max-w-4xl">${questions}</div>
+        `;
+    }
+
+    function renderShadowing() {
+        let blocks = lessonData.paragraphs.filter(p => !p.startsWith('【')).map((p, idx) => `
+            <div class="shadowing-block bg-white p-6 rounded-xl border border-slate-200 mb-4 flex flex-col md:flex-row gap-6">
+                <div class="flex-1 zh-text text-slate-800">${p}</div>
+                <div class="w-full md:w-48 shrink-0 flex flex-col gap-3 justify-center border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+                    <button id="btn-rec-shadow-${idx}" onclick="toggleRecord(${idx}, 'shadow')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition flex items-center justify-center gap-2">
+                        <i class="fas fa-microphone"></i> <span>Ghi âm</span>
+                    </button>
+                    <div id="playback-zone-shadow-${idx}" class="${recordedAudios[idx] ? '' : 'hidden'} flex flex-col gap-2">
+                        <audio id="audio-shadow-${idx}" src="${recordedAudios[idx] || ''}" controls class="w-full h-8"></audio>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-600 pb-4 border-b-4 border-blue-200 tracking-wide" style="line-height: 1.4;">第八课：休闲，人生多彩之面</h1>
+            </div>
+            
+            <div class="flex justify-between items-end mb-6">
+                <h2 class="text-2xl font-bold text-slate-800"><i class="fas fa-microphone-alt text-blue-600 mr-2"></i>智能跟读 (Shadowing)</h2>
+                <button onclick="downloadRecordings('shadow', 'Shadowing')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-download"></i> Tải bài nộp (HTML)
+                </button>
+            </div>
+            
+            <!-- User Info Form -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 mb-6 shadow-sm">
+                <h3 class="font-bold text-slate-800 mb-4 text-lg border-b pb-2">请填写个人信息 (Vui lòng điền thông tin cá nhân)</h3>
+                <div class="flex gap-4 flex-col md:flex-row">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">STT (序号)</label>
+                        <input type="text" id="student-stt-shadow" placeholder="Ví dụ: 01" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Họ và tên (姓名)</label>
+                        <input type="text" id="student-name-shadow" placeholder="Ví dụ: Nguyễn Văn A" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg mb-6 text-sm">
+                <i class="fas fa-info-circle mr-1"></i> <b>Hướng dẫn:</b> Nhấn "Ghi âm" để đọc theo từng đoạn. Sau khi ghi âm xong các đoạn, nhấn nút <b>"Tải bài nộp"</b> màu xanh phía trên để tải toàn bộ file nghe về máy tính gửi cho giáo viên.
+            </div>
+            <div>${blocks}</div>
+        `;
+    }
+
+    async function toggleRecord(idx, pType) {
+        const btn = document.getElementById(`btn-rec-${pType}-${idx}`);
+        
+        let recDict;
+        if (pType === 'shadow') recDict = recordedAudios;
+        else if (pType === 'p1') recDict = recordedPractice1;
+        else if (pType === 'p2') recDict = recordedPractice2;
+
+        if (currentRecordingId === `${pType}-${idx}`) {
+            // Stop recording
+            mediaRecorder.stop();
+            btn.classList.remove('recording');
+            btn.innerHTML = '<i class="fas fa-microphone"></i> <span>Ghi lại</span>';
+            currentRecordingId = null;
+        } else {
+            // Start recording
+            if(currentRecordingId !== null) {
+                alert("Vui lòng dừng đoạn đang ghi âm trước!");
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = function() {
+                        const base64data = reader.result;
+                        recDict[idx] = base64data;
+                        
+                        // Update UI
+                        const pbZone = document.getElementById(`playback-zone-${pType}-${idx}`);
+                        const audioEl = document.getElementById(`audio-${pType}-${idx}`);
+                        pbZone.classList.remove('hidden');
+                        audioEl.src = base64data;
+                    }
+                    // Stop tracks to release mic
+                    stream.getTracks().forEach(track => track.stop());
+                });
+
+                mediaRecorder.start();
+                currentRecordingId = `${pType}-${idx}`;
+                btn.classList.add('recording');
+                btn.innerHTML = '<i class="fas fa-stop"></i> <span>Dừng lại</span>';
+                
+            } catch (err) {
+                alert("Lỗi truy cập Micro: " + err);
+            }
+        }
+    }
+
+    // --- DOWNLOAD EXPORT LOGIC ---
+    function downloadRecordings(pType, titleStr) {
+        let recDict;
+        let dataList;
+        
+        if (pType === 'shadow') {
+            recDict = recordedAudios;
+            dataList = lessonData.paragraphs.filter(p => !p.startsWith('【'));
+        } else if (pType === 'p1') {
+            recDict = recordedPractice1;
+            dataList = lessonData.practice1;
+        } else if (pType === 'p2') {
+            recDict = recordedPractice2;
+            dataList = lessonData.practice2;
+        }
+
+        if (Object.keys(recDict).length === 0) {
+            alert("您还没有录制任何内容！(Bạn chưa ghi âm đoạn nào!)");
+            return;
+        }
+        
+        const stt = document.getElementById(`student-stt-${pType}`).value.trim() || '未填';
+        const name = document.getElementById(`student-name-${pType}`).value.trim() || '未填';
+
+        let exportDate = new Date().toLocaleString('vi-VN');
+        let contentHtml = dataList.map((item, idx) => {
+            if(recDict[idx]) {
+                if(pType === 'shadow') {
+                    return `
+                        <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+                            <p style="font-family: 'SimSun', serif; font-size: 18px; line-height: 1.6; margin-bottom: 10px;">${item}</p>
+                            <audio src="${recDict[idx]}" controls style="width: 100%;"></audio>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+                            <p style="font-family: 'SimSun', serif; font-size: 18px; line-height: 1.6; margin-bottom: 5px;"><b>题目:</b> ${item.q}</p>
+                            <p style="font-family: 'SimSun', serif; font-size: 16px; color: #2563eb; margin-bottom: 10px;"><b>提示:</b> ${item.hint}</p>
+                            <audio src="${recDict[idx]}" controls style="width: 100%;"></audio>
+                        </div>
+                    `;
+                }
+            }
+            return '';
+        }).join('');
+
+        let fullHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Bài Nộp - 第八课 - ${titleStr}</title>
+                <style>body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }</style>
+            </head>
+            <body>
+                <h1 style="color: #2563eb;">跟读/练习作业录音 (Bài Nộp)</h1>
+                <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <p style="margin: 5px 0;"><b>课文：</b> 我们的周末生活 (第八课) - ${titleStr}</p>
+                    <p style="margin: 5px 0;"><b>STT (序号)：</b> ${stt}</p>
+                    <p style="margin: 5px 0;"><b>Họ và tên (姓名)：</b> ${name}</p>
+                    <p style="margin: 5px 0;"><b>导出时间：</b> ${exportDate}</p>
+                </div>
+                <hr style="margin: 20px 0;">
+                ${contentHtml}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([fullHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        let safeName = name.replace(/[^a-zA-Z0-9]/g, '_');
+        let fileSuffix = pType === 'shadow' ? 'Shadowing' : (pType === 'p1' ? 'LuyenTap1' : 'LuyenTap2');
+        a.download = `STT${stt}_${safeName}_Bai8_${fileSuffix}.html`;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Init first tab
+    window.onload = () => {
+        switchTab('reading', document.querySelector('.nav-item'));
+    };
+</script>
+</body>
+</html>
